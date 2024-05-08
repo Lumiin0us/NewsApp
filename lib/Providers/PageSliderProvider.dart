@@ -14,6 +14,8 @@ class PageSliderProvider with ChangeNotifier {
   List articlesFilter = [];
 
   List favorites = [];
+  List saves = [];
+
   List<ArticlesHive> savedArticlesList = [];
   List<FavoritesHolder> favoritesData = [];
   List urls = [];
@@ -58,6 +60,11 @@ class PageSliderProvider with ChangeNotifier {
   generateFavorites(articleList) {
     length = articles.length;
     favorites = List.generate(length, (index) => false);
+    saves = List.generate(length, (index) => false);
+  }
+
+  void save(int index) {
+    saves[index] = !saves[index];
   }
 
   Future<List> getArticlesAPI() async {
@@ -80,11 +87,15 @@ class PageSliderProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void saveArticles(ArticlesHive object) {
+  void saveArticles(ArticlesHive object, int index, String title) {
     if (urls.any((element) => element.contains(object.title))) {
+      deleteArticle(index, title);
+      save(index);
+      notifyListeners();
     } else {
       urls.add(object.title);
       Hive.box<ArticlesHive>("SavedArticles").add(object);
+      save(index);
       notifyListeners();
     }
   }
@@ -98,9 +109,14 @@ class PageSliderProvider with ChangeNotifier {
   }
 
   void deleteArticle(int index, String title) {
-    urls.remove(title);
-
-    Hive.box<ArticlesHive>("SavedArticles").deleteAt(index);
+    final itemToDelete =
+        Hive.box<ArticlesHive>("SavedArticles").values.firstWhere(
+              (element) => element.title == title,
+            );
+    if (itemToDelete.isInBox) {
+      Hive.box<ArticlesHive>("SavedArticles").delete(itemToDelete.key);
+    }
+    // Hive.box<ArticlesHive>("SavedArticles").deleteAt(index);
     notifyListeners();
   }
 

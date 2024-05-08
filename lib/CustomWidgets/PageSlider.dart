@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:news_app/Logging/Logs.dart';
 import 'package:news_app/Models/HiveModels/ArticlesHive.dart';
 import 'package:news_app/Providers/PageSliderProvider.dart';
 import 'package:news_app/Providers/ThemeProvider.dart';
 import 'package:news_app/Screens/PageWebView.dart';
-import 'package:news_app/Screens/SavedArticles.dart';
 import 'package:news_app/util/Utilities.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PageSlider extends StatefulWidget {
   const PageSlider({super.key});
@@ -15,10 +16,13 @@ class PageSlider extends StatefulWidget {
 }
 
 class _PageSliderState extends State<PageSlider> {
+  late Logs logger;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    logger = Logs();
+    logger.startTimer();
     Provider.of<PageSliderProvider>(context, listen: false).getArticlesAPI();
   }
 
@@ -77,7 +81,10 @@ class _PageSliderState extends State<PageSlider> {
                             ? const AlwaysScrollableScrollPhysics()
                             : const NeverScrollableScrollPhysics(),
                         restorationId: "HomePageRestore",
-                        onPageChanged: (pageIndex) {},
+                        onPageChanged: (pageIndex) {
+                          print("TOTAL TIME:${logger.restartTimer()}");
+                          print("TOTAL TIME!");
+                        },
                         itemCount: value.articlesFilter.length,
                         itemBuilder: (context, index) {
                           return PageView.builder(
@@ -155,7 +162,7 @@ class _PageSliderState extends State<PageSlider> {
                                                     return Padding(
                                                       padding:
                                                           const EdgeInsets.only(
-                                                              bottom: 10),
+                                                              bottom: 6),
                                                       child: IconButton(
                                                         onPressed: () {
                                                           value.favorite(
@@ -188,98 +195,138 @@ class _PageSliderState extends State<PageSlider> {
                                                 Padding(
                                                   padding:
                                                       const EdgeInsets.only(
-                                                          bottom: 10),
+                                                          bottom: 6),
                                                   child: IconButton(
                                                       onPressed: () {
-                                                        value.controller.animateToPage(
-                                                            1,
-                                                            duration:
-                                                                const Duration(
-                                                                    milliseconds:
-                                                                        300),
-                                                            curve: Curves.ease);
+                                                        value.saveArticles(
+                                                            ArticlesHive(
+                                                                title: value
+                                                                    .articles[
+                                                                        index]
+                                                                    .title,
+                                                                description: value
+                                                                    .articles[
+                                                                        index]
+                                                                    .body),
+                                                            index,
+                                                            value
+                                                                .articles[index]
+                                                                .title);
                                                       },
-                                                      icon: const Icon(
-                                                          Icons.arrow_upward,
-                                                          size: 30)),
+                                                      icon: Icon(
+                                                        value.saves[index]
+                                                            ? Icons
+                                                                .turned_in_rounded
+                                                            : Icons
+                                                                .turned_in_not_rounded,
+                                                        size: 30,
+                                                      )),
                                                 ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 10),
-                                                  child: IconButton(
-                                                      onPressed: () {
-                                                        showModalBottomSheet(
-                                                            context: context,
-                                                            builder: (context) {
-                                                              return SizedBox(
-                                                                height: MediaQuery.of(
-                                                                            context)
-                                                                        .size
-                                                                        .height *
-                                                                    0.2,
-                                                                child: Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          16.0),
-                                                                  child: Row(
-                                                                    crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceBetween,
-                                                                    children: [
-                                                                      IconButton(
-                                                                          onPressed:
-                                                                              () {
-                                                                            value.saveArticles(ArticlesHive(
-                                                                                title: value.articles[index].title,
-                                                                                description: value.articles[index].body));
-                                                                          },
-                                                                          icon:
-                                                                              const Icon(
-                                                                            Icons.archive,
-                                                                            size:
-                                                                                40,
-                                                                          )),
-                                                                      Consumer<ThemeProvider>(builder: (context,
-                                                                          colorValue,
-                                                                          child) {
-                                                                        return IconButton(
-                                                                            onPressed:
-                                                                                () {
-                                                                              colorValue.setTheme();
-                                                                            },
-                                                                            icon: colorValue.lightMode
-                                                                                ? const Icon(
-                                                                                    Icons.wb_sunny_outlined,
-                                                                                    size: 40,
-                                                                                  )
-                                                                                : const Icon(Icons.dark_mode, size: 40));
-                                                                      }),
-                                                                      IconButton(
-                                                                          onPressed:
-                                                                              () {
-                                                                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavedArticles()));
-                                                                          },
-                                                                          icon:
-                                                                              const Icon(
-                                                                            Icons.article_outlined,
-                                                                            size:
-                                                                                40,
-                                                                          ))
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            });
-                                                      },
-                                                      icon: const Icon(
-                                                          Icons.more_vert,
-                                                          size: 30)),
-                                                ),
+                                                IconButton(
+                                                    onPressed: () async {
+                                                      await Share.share(
+                                                          "${value.articles[index].title} \n \n"
+                                                          "https://www.google.com");
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.share,
+                                                      size: 30,
+                                                    )),
+                                                // Padding(
+                                                //   padding:
+                                                //       const EdgeInsets.only(
+                                                //           bottom: 10),
+                                                // child: IconButton(
+                                                //     onPressed: () {
+                                                //       value.controller.animateToPage(
+                                                //           1,
+                                                //           duration:
+                                                //               const Duration(
+                                                //                   milliseconds:
+                                                //                       300),
+                                                //           curve: Curves.ease);
+                                                //     },
+                                                //     icon: const Icon(
+                                                //         Icons.arrow_upward,
+                                                //         size: 30)),
+                                                // ),
+                                                // Padding(
+                                                //   padding:
+                                                //       const EdgeInsets.only(
+                                                //           bottom: 10),
+                                                //   child: IconButton(
+                                                //       onPressed: () {
+                                                //         showModalBottomSheet(
+                                                //             context: context,
+                                                //             builder: (context) {
+                                                //               return SizedBox(
+                                                //                 height: MediaQuery.of(
+                                                //                             context)
+                                                //                         .size
+                                                //                         .height *
+                                                //                     0.2,
+                                                //                 child: Padding(
+                                                //                   padding:
+                                                //                       const EdgeInsets
+                                                //                           .all(
+                                                //                           16.0),
+                                                //                   child: Row(
+                                                //                     crossAxisAlignment:
+                                                //                         CrossAxisAlignment
+                                                //                             .start,
+                                                //                     mainAxisAlignment:
+                                                //                         MainAxisAlignment
+                                                //                             .spaceBetween,
+                                                //                     children: [
+                                                //                       IconButton(
+                                                //                           onPressed:
+                                                //                               () {
+                                                //                             value.saveArticles(ArticlesHive(
+                                                //                                 title: value.articles[index].title,
+                                                //                                 description: value.articles[index].body));
+                                                //                           },
+                                                //                           icon:
+                                                //                               const Icon(
+                                                //                             Icons.archive,
+                                                //                             size:
+                                                //                                 40,
+                                                //                           )),
+                                                //                       Consumer<ThemeProvider>(builder: (context,
+                                                //                           colorValue,
+                                                //                           child) {
+                                                //                         return IconButton(
+                                                //                             onPressed:
+                                                //                                 () {
+                                                //                               colorValue.setTheme();
+                                                //                             },
+                                                //                             icon: colorValue.lightMode
+                                                //                                 ? const Icon(
+                                                //                                     Icons.wb_sunny_outlined,
+                                                //                                     size: 40,
+                                                //                                   )
+                                                //                                 : const Icon(Icons.dark_mode, size: 40));
+                                                //                       }),
+                                                //                       IconButton(
+                                                //                           onPressed:
+                                                //                               () {
+                                                //                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavedArticles()));
+                                                //                           },
+                                                //                           icon:
+                                                //                               const Icon(
+                                                //                             Icons.article_outlined,
+                                                //                             size:
+                                                //                                 40,
+                                                //                           ))
+                                                //                     ],
+                                                //                   ),
+                                                //                 ),
+                                                //               );
+                                                //             });
+                                                //       },
+                                                //       icon: const Icon(
+                                                //           Icons.more_vert,
+                                                //           size: 30)),
+                                                // ),
                                               ],
                                             ),
                                           ),

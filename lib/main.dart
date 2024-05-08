@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:news_app/Models/HiveModels/ArticlesHive.dart';
 import 'package:news_app/Providers/CategoriesProvider.dart';
 import 'package:news_app/Providers/ThemeProvider.dart';
@@ -8,11 +9,8 @@ import 'package:news_app/Providers/WebViewProvider.dart';
 import 'package:news_app/Screens/HomePage.dart';
 import 'package:news_app/Providers/PageSliderProvider.dart';
 import 'package:news_app/Providers/SwitchBottomNav.dart';
-import 'package:news_app/Screens/Authentication/Login.dart';
-import 'package:news_app/Screens/Authentication/SignUp.dart';
 import 'package:news_app/util/Utilities.dart';
 import 'package:provider/provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
